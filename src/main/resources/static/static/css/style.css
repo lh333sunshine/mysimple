@@ -1,0 +1,20 @@
+body{
+	background-color: #fff;
+}
+
+.myfieldset label{
+	margin-top: 5px;
+}
+
+.myfieldset label ,.myfieldset input, .myfieldset select  {
+	float: left;
+	margin-left: 5px;
+	height: 30px;
+}
+
+.json {outline: 1px solid #ccc; padding: 5px; margin: 5px; background-color: #f7f7f7; }
+.json .string { color: green; }
+.json .number { color: darkorange; }
+.json .boolean { color: blue; }
+.json .null { color: magenta; }
+.json .key { color: red; }

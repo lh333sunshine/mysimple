@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<title>API测试</title>
+<div th:include="components/include"></div>
+<script>
+
+var g_reqId = null;
+jQuery(function($) {
+	
+	initApi();
+	
+	autoSend();
+	
+	
+	$("#now_url").html(getApiHost());
+});
+
+function initApi(){
+	var callback = function (result){
+		$('#api').typeahead({
+		      source: function(query, process) {
+		         return result.data;
+		      }
+		});
+	}
+	var params = {};
+	//sendApi(callback, "systemtool/queryAllApi", params);
+}
+    
+function autoSend(){
+	var reqId = getQueryString("reqId");
+	var callback = function(result){
+		 $("#api").val(result.data.api);
+		 var o = JSON.parse(result.data.requestParams);
+		 
+		 var s = JSON.stringify(o,undefined, 4);
+		 $("#request_params").val(s);
+		 send();
+	}
+	if(reqId){
+		var params = {"reqId":reqId};
+		sendApi(callback, "systemtool/queryLogDetail", params);
+	}
+}
+function getQueryString(name) {
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+    var r = window.location.search.substr(1).match(reg);
+    if (r != null) return unescape(r[2]); return null;
+}
+
+function send(){
+	var params = {};
+	params = JSON.parse( $("#request_params").val()); 
+	
+	var headers = {};
+	if($('#request_headers').val()){
+		headers = JSON.parse($('#request_headers').val());
+	}
+	 
+	params.headers = headers;
+	$("#dl_response_content").JSONView("{}");
+	var callback = function(result){
+		g_reqId = result.reqId;
+		$("#dl_response_content").JSONView(result);
+		$.bootstrapLoading.end();
+	}
+	var val=$('input:radio[name="method"]:checked').val();
+    if(val!=null){
+    	params.method = val;
+    }
+	sendApi(callback, $("#api").val().replace(".do",""), params);
+	$.bootstrapLoading.start();
+}
+
+function showError(){
+	$("#dl_api").html("");
+	$("#dl_error_trace").html("");
+	var callback = function(result){
+		var dialog = $( "#dialog-message" ).removeClass('hide').dialog({
+			modal: true,
+			height: 500,
+	        width: 800, 
+		});
+		$("#dl_api").html("["+result.data.api + "] / [" + result.data.reqId+"]");
+		$("#dl_error_trace").html(result.data.errorTrace);
+		$.bootstrapLoading.end();
+	}
+	var params = {"reqId":g_reqId};
+	sendApi(callback, "systemtool/queryLogDetail", params);
+	$.bootstrapLoading.start();
+}
+function getDataUrl(params) {
+	  // separate the data into an array, in case the are multiple pairs name=value
+	  var ar_url_data = params.split('&');
+
+	  // traverse the array, and adds into an object elements name:value
+	  var data_url = {};
+	  for(var i=0; i<ar_url_data.length; i++) {
+	    var ar_val = ar_url_data[i].split('=');           // separate name and value from each pair
+	    data_url[ar_val[0]] = ar_val[1];
+	  }
+
+	  return data_url;
+}
+
+ 
+</script>
+
+</head>
+
+<body >
+<div class="main-container" id="main-container" >
+	<div class="page-content">
+		<div class="page-header">
+			<h1>
+				接口测试  <span id="now_url" style="font-size:12px;"></span>
+			</h1>
+		</div>
+		<div class="row">
+			<div class="col-xs-12">
+				<form class="form-horizontal" role="form">
+					<div class="form-group">
+						<label class="col-sm-3 control-label no-padding-right" for="form-field-1">接口名</label>
+						<div class="col-sm-9">
+							<input type="text" id="api" value="" class="col-xs-10 col-sm-6" data-provide="typeahead"  placeholder="输入接口url,域名后面部分"/>
+						</div>
+					</div>
+					
+					<div class="form-group">
+						<label class="col-sm-3 control-label no-padding-right" for="form-field-1">接口参数</label>
+						<div class="col-sm-9">
+							<textarea class="form-control" style="width:95%;height: 200px;" id="request_params" placeholder=' json: {"a":"1","b":"2","c":3}' ></textarea>
+						</div>
+					</div>
+					
+					<div class="form-group">
+						<label class="col-sm-3 control-label no-padding-right" for="form-field-1">请求头</label>
+						<div class="col-sm-9">
+							<textarea class="form-control" style="width:95%;height: 40px;" id="request_headers" placeholder='json: {"a":"1","b":"2","c":3}' ></textarea>
+						</div>
+					</div>
+					
+					<div class="form-group">
+						<label class="col-sm-3 control-label no-padding-right">GET/POST</label>
+						<div class="col-sm-9">
+							<label >
+								<input id="method_get" name="method" value="GET" type="radio" class="ace">
+								<span class="lbl">GET</span>
+							</label>
+							<label style="padding-left: 10px;">
+								<input id="method_post"  name="method"  value="POST" type="radio" checked="checked" class="ace">
+								<span class="lbl">POST</span>
+							</label>
+							
+							<button class="btn btn-info" style="margin-left: 300px;" onclick="send()" type="button">发送</button>
+							<button class="btn btn-info" style="margin-left: 50px;" onclick="showError()" type="button">查看异常</button>
+						</div>
+					</div>
+					
+					<div class="form-group">
+						<label class="col-sm-3 control-label no-padding-right">返回内容</label>
+						<div class="col-sm-9">
+							<div id="dl_response_content"></div>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="dialog-message" class="hide">
+	<h2>接口/REQ_ID</h2>
+	<p id="dl_api" ></p>
+	<h2>异常</h2>
+	<pre id="dl_error_trace" ></pre>
+	
+</div>
+</body>
+</html>
+
+
+
+
+

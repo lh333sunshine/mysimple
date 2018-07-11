@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<!-- mvn 使用命令:  mybatis-generator:generate -->
+<generatorConfiguration>
+	
+    <context id="mysqlgenerator" targetRuntime="MyBatis3">
+		
+        <!-- domain 序列化 -->
+        <plugin type="org.mybatis.generator.plugins.SerializablePlugin">
+            <!-- 必须实现Serializable接口 -->
+            <property name="suppressJavaInterface" value="false"/>
+        </plugin>
+ 
+		<plugin type="com.xxg.mybatis.plugins.MySQLLimitPlugin" />
+		
+        <!-- 是否生成注释，为false时，生成注释 -->
+        <commentGenerator>
+            <property name="suppressAllComments" value="false"/>
+        </commentGenerator>
+       
+        <jdbcConnection driverClass="com.mysql.jdbc.Driver"
+                        connectionURL="jdbc:mysql://127.0.0.1:3306/test" userId="root" 
+                        password="root">
+            <property name="characterEncoding" value="utf-8"/>
+            <property name="useUnicode" value="true"/>
+        </jdbcConnection>
+		
+        <javaTypeResolver>
+            <property name="forceBigDecimals" value="false"/>
+        </javaTypeResolver>
+
+        <!-- generate Model -->
+        <javaModelGenerator targetPackage="com.mysimple.dao"
+                            targetProject="src/main/java/">
+            <property name="enableSubPackages" value="true"/>
+            <property name="trimStrings" value="true"/>
+        </javaModelGenerator>
+
+        <!-- generate xml -->
+        <sqlMapGenerator targetPackage="com.mysimple.dao.mapper"
+                         targetProject="src/main/java/">
+            <property name="enableSubPackages" value="true"/>
+        </sqlMapGenerator>
+
+        <!-- generate Mapper -->
+        <javaClientGenerator type="XMLMAPPER"
+                             targetPackage="com.mysimple.dao.mapper" targetProject="src/main/java/">
+            <property name="enableSubPackages" value="true"/>
+        </javaClientGenerator>
+        
+        <table  tableName="user_test" > 
+         
+    	</table>
+    	 
+        <!-- 
+        <table  tableName="sys_api_doc" > 
+	        <property name="useActualColumnNames" value="false"/>
+	    	<generatedKey column="id" sqlStatement="MySql" identity="true" />
+    	</table>
+    	<table  tableName="sys_api_doc_log" > 
+	        <property name="useActualColumnNames" value="false"/>
+	    	<generatedKey column="id" sqlStatement="MySql" identity="true" />
+    	</table>
+    	
+        
+        <table  tableName="user_test" > 
+	        <property name="useActualColumnNames" value="false"/>
+	    	<generatedKey column="id" sqlStatement="MySql" identity="true" />
+    	</table>
+    	  
+        <table  tableName="sys_logs_request" > </table>
+ 	 	-->
+    </context>
+</generatorConfiguration>

@@ -1,0 +1,32 @@
+**$name（$url）**
+
+***$desc***
+
+
+**请求参数说明**
+|参数名|必填|类型|说明|
+|:---- |:---|:----- |----- |
+#foreach($item in $requestList)
+|$item.name |$item.notNull  |$item.type |$item.desc  | 
+#end
+
+
+**请求示例**
+``` json
+$demoRequestData
+```
+
+**响应参数说明**
+|参数名|类型|说明|
+|:-----  |:-----|-----|
+#foreach($item in $responseList)
+|$item.name  |$item.type |$item.desc |  
+#end
+
+
+**响应示例**
+```  json
+$demoData
+
+```
+

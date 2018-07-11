@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<div th:include="components/include"></div>
+<script>
+var page_size = 5;
+var grid_selector = "#grid-table";
+var pager_selector = "#grid-pager";
+var total_pages = 1;
+var data_result = {};
+jQuery(function($) {
+	 
+	jQuery(grid_selector).jqGrid({
+		datatype: "local",
+		height: 320,
+		colNames:[ 'ReqID','API', 'CODE', 'IP','运行<br/>(毫秒)','入出参<br/>长度(K)','访问时间',' '],
+		colModel:[
+			{name:'reqId',width:160},
+			{name:'api',width:150},
+			{name:'returnCode',width:30},
+			{name:'ip',width:60},
+			{name:'runTime',width:30},
+			{name:'allLen',width:40},
+			{name:'createTime',width:60 ,formatter:"date",formatoptions: {srcformat:'Y-m-d H:i:s',newformat:'m-d H:i:s'}},
+			{name:'myinfo',index:'reqId' ,width:40,  sortable:false, resize:false } ,
+		], 
+		rowNum:page_size,
+		pager :pager_selector,
+		loadComplete : function() {
+			var allRowsInGrid =$(this).jqGrid('getRowData');
+			var ids=$(this).jqGrid('getDataIDs');
+            for(var i=0; i<ids.length; i++){
+                myinfo = "<a href='#'  onclick=\"showInfo('"+allRowsInGrid[i].reqId+"')\">详情</a> <a href='#'  onclick=\"resend('"+allRowsInGrid[i].reqId+"')\">重发</a>";  
+                $(this).jqGrid('setRowData', ids[i], { myinfo: myinfo });
+            }
+		},
+		onPaging:function(pageBtn){ 
+			var page = computerJqgridPage(grid_selector,pageBtn); 
+			loadGridData(page);
+        },  
+		//caption: "jqGrid with inline editing",
+		autowidth: true,
+		rownumbers: true,
+		//altRows: true,
+		//toppager: true,
+		
+		//multiselect: true,
+		//multikey: "ctrlKey",
+        //multiboxonly: true,
+        //viewrecords : true,
+	});
+	
+	$("#startTime").val(showdate(-1));
+	
+	loadGridData();
+	
+	$("#reqId").keypress(function (e) { 
+	    var key = e.which; 
+	    if (key == 13) {
+	    	loadGridData();
+	    }
+	});
+	$("#endTime").keypress(function (e) { 
+	    var key = e.which; 
+	    if (key == 13) {
+	    	loadGridData();
+	    }
+	});
+	$("#api").keypress(function (e) { 
+	    var key = e.which; 
+	    if (key == 13) {
+	    	loadGridData();
+	    }
+	});
+	$("#runTime").keypress(function (e) { 
+	    var key = e.which; 
+	    if (key == 13) {
+	    	loadGridData();
+	    }
+	});
+	
+	initApi();
+	
+	$("#now_url").html(getApiHost());
+});
+
+function initApi(){
+	var callback = function (result){
+		$('#api').typeahead({
+		      source: function(query, process) {
+		         return result.data;
+		      }
+		});
+	}
+	var params = {};
+	//sendApi(callback, "systemtool/queryAllApi", params);
+}
+
+function showdate(n) 
+{ 
+	var uom = new Date(new Date()-0+n*86400000); 
+	var m = (uom.getMonth()+1);
+	if(m < 10){
+		m = "0"+m;
+	}
+	var d = uom.getDate();
+	if(d < 10){
+		d = "0"+d;
+	}
+	uom = uom.getFullYear() + "-" + m + "-" + d + " " + "00:00:00"; 
+	return uom; 
+} 
+
+function resend(reqId){
+	window.open('apitest.html?reqId='+reqId,'newwindow','height=500, width=1000,top=100,left=100');
+}
+
+function showInfo(reqId){
+	$("#dl_request_params").JSONView("{}"); 
+	$("#dl_response_content").JSONView("{}");
+	$("#dl_error_trace").html("");
+	
+	var callback = function(result){
+		var dialog = $( "#dialog-message" ).removeClass('hide').dialog({
+			modal: true,
+			height: 500,
+	        width: 800, 
+		});
+		
+		var apiStr = (getApiHost() + result.data.api).replace("api/api","api");
+		$("#dl_api").html("<a href='"+apiStr+"' target='_blank'>"+apiStr+"</a> ; userId="+result.data.userId);
+		if(result.data.requestParams != null){
+			$("#dl_request_params").JSONView(result.data.requestParams);
+		}
+		if(result.data.responseContent != null){
+			$("#dl_response_content").JSONView(result.data.responseContent);
+		}
+		$("#dl_error_trace").html(result.data.errorTrace);
+		$.bootstrapLoading.end();
+	}
+	var params = {"reqId":reqId};
+	sendApi(callback, "systemtool/queryLogDetail", params);
+	$.bootstrapLoading.start();
+}
+var reader = {  
+	root:function(object){ return data_result.data},  
+	page:function(object){ return data_result.pageNum},  
+	total:function(object){  return total_pages },  
+	records:function(object){ return data_result.records},  
+	
+}
+function loadGridData(page){
+ 	var callback = function(result){
+ 		data_result = result;	
+ 		total_pages = countTotalPages(data_result.records,data_result.pageSize);
+ 		$(grid_selector).setGridParam({ localReader: reader}).trigger('reloadGrid'); 
+		$.bootstrapLoading.end();
+	}
+	$.bootstrapLoading.start();
+	
+	if(page == null){
+		page = 1;
+	}
+	var params = {};
+	params.reqId = $("#reqId").val();
+	params.api = $("#api").val();
+	params.endTime = $("#endTime").val();
+	params.startTime = $("#startTime").val();
+	params.returnCode = $("#returnCode").val();
+	params.runTime = $("#runTime").val();
+	params.sortby = "create_time desc";
+	sendApi(callback, "systemtool/queryRequestLog", params,page, page_size);
+}
+</script>
+
+</head>
+
+<body >
+<div class="main-container" id="main-container" >
+	<div class="page-content">
+		<div class="page-header">
+			<h1>
+				日志查询 <span id="now_url" style="font-size:12px;"></span>
+			</h1>
+		</div>
+		<div class="row" >
+		<fieldset style="margin-left: 20px;" class="myfieldset">
+			<label>Req ID</label> <input type="text" id="reqId" placeholder="可输入全部或部分，部分使用like查询"  style="width:280px"/> 
+			<label style="margin-left: 20px;">API</label> <input type="text" id="api" data-provide="typeahead" style="width:280px" placeholder="输入接口关键词自动提示,如 api">
+		</fieldset>
+		<fieldset style="margin-left: 20px;" class="myfieldset">
+			<label >开始时间</label> <input type="text" id="startTime" placeholder="示例 : 2017-04-14 18:22">
+			<label >结束时间</label> <input type="text" id="endTime" placeholder="示例 : 2017-04-15 18:22">
+			<label style="margin-left: 20px;">运行 </label> <input type="text" id="runTime" style="width:100px" placeholder="大于多少毫秒">
+			<label style="margin-left: 20px;" >异常</label> 
+			<select class="form-control" style="width:100px; " id="returnCode">
+				<option value="">全部</option>
+				<option value="500">未知异常</option>
+				<option value="10005">数据库异常</option>
+				<option value="10500">系统异常</option>
+				<option value="-1">其他异常</option>
+			</select>
+			<button type="button" class="btn btn-purple btn-sm" style="margin-left: 20px;" onclick="loadGridData()">
+				Search <i class="icon-search icon-on-right bigger-110"></i>
+			</button>
+		</fieldset>	
+		</div>
+		<div class="row">
+			<div class="col-xs-12">
+				<table id="grid-table"></table>
+				<div id="grid-pager"></div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="dialog-message" class="hide">
+	<h2>接口</h2>
+	<p id="dl_api" ></p>
+	
+	<div class="hr hr-12 hr-double"></div>
+	
+	<h2>入参 (长度大于4K忽略)</h2>
+	<div id="dl_request_params" ></div>
+	
+	<div class="hr hr-12 hr-double"></div>
+	
+	<h2>出参(长度大于4K忽略)</h2>
+	<div id="dl_response_content" ></div>
+	
+	<div class="hr hr-12 hr-double"></div>
+	
+	<h2>异常</h2>
+	<pre id="dl_error_trace" ></pre>
+	
+</div>
+
+</body>
+</html>
+
+
+
+
+

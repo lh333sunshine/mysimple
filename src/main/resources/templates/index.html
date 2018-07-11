@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+  <head>
+     <div th:include="components/include"></div>
+     
+     <script type="text/javascript">
+     var dialog = null;
+     $(function($){
+    	 $(".nav-list li").click(function(){
+    		 if($(this).attr("url").indexOf('http') > -1 ){
+    			 window.open($(this).attr("url"),"_blank");
+    		 }else{
+    			 $("#myiframe").attr("src",$(this).attr("url"));  
+        		 $(this).siblings().removeClass("active");
+        		 $(this).addClass("active"); 
+    		 }
+    	 });
+    	 
+    	 var list = getApiHostList();
+    	 for(i in list){
+    		 if(list[i] != "" ){
+    			 $("#selhost").append("<option value='"+list[i]+"'>"+list[i]+"</option>");
+    		 }
+    	 }
+    	 
+    	 $("#selhost").val(getCookie("huaao_host_list_now"));
+    	 
+    	 $("#selhost").change(function(){
+    		 setCookie("huaao_host_list_now",$('#selhost').val());
+    		 window.location.reload();
+    	 });
+    	 
+    	 $("#addUrl").click(function(){
+    		 dialog =  $( "#dialog-message" ).removeClass('hide').dialog({
+    				modal: true,
+    				height: 500,
+    		        width: 800, 
+    			}); 
+    	 });
+    	 $("#delUrl").click(function(){
+    		 var huaao_host_list = getCookie("huaao_host_list");
+    		 huaao_host_list = huaao_host_list.replace($('#selhost option:selected').val(),"");
+    		 setCookie("huaao_host_list",huaao_host_list);
+    		 $('#selhost option:selected').remove();
+    		 setCookie("huaao_host_list_now",$('#selhost').val());
+    		 
+    	 });
+    	 
+    	 $("#addNewUrl").click(function () {
+    		 
+    		 var huaao_host_list = getCookie("huaao_host_list");
+        	 //检查是否存在
+        	 if(!$("#new_host_url").val() || huaao_host_list.indexOf($("#new_host_url").val()) > -1){
+        		 return ;
+        	 }
+        	 
+        	 setCookie ("huaao_host_list", huaao_host_list+$("#new_host_url").val()+",");
+        	 setCookie("huaao_host_list_now",$("#new_host_url").val() );
+        	 var index =  $('#selhost option').length ;
+        	 $("#selhost").append("<option value='0'>"+$("#new_host_url").val()+"</option>");
+        	 
+        	 
+        	 
+        	// $("#new_host_url").val("");
+        	 
+        	 dialog.dialog('close');
+         });
+     });
+     </script>
+  </head> 
+  <body>
+  <div class="navbar navbar-default" id="navbar">
+		<script type="text/javascript">
+			try{ace.settings.check('navbar' , 'fixed')}catch(e){}
+		</script>
+
+		<div class="navbar-container" id="navbar-container">
+			<div class="navbar-header pull-left">
+				<a class="navbar-brand">
+					<small> <i class="icon-leaf"></i> 接口系统支撑平台 </small>
+				</a> 
+			</div> 
+			
+			<div style="margin: 5px !important;" class="navbar-header pull-right" >
+				<select id="selhost" class="form-control" style="width:250px;float:left"></select> <input type="button" id="addUrl" value="添加地址"/> <input type="button" id="delUrl" value="删除地址"/>
+			</div> 
+		</div> 
+	</div>
+  	 
+	<div class="main-container" id="main-container">
+		<script type="text/javascript">
+			try{ace.settings.check('main-container' , 'fixed')}catch(e){}
+		</script>
+		
+		<div class="sidebar" id="sidebar">
+			<script type="text/javascript">
+				try{ace.settings.check('sidebar' , 'fixed')}catch(e){}
+			</script>
+			<ul class="nav nav-list">
+				<li class="li active" url="logquery.html">
+					<a href="#" >
+						<i class="icon-dashboard"></i>
+						<span class="menu-text">日志查询</span>
+					</a>
+				</li>
+				<li class="li " url="apitest.html">
+					<a href="#" >
+						<i class="icon-dashboard"></i>
+						<span class="menu-text">接口测试</span>
+					</a>
+				</li>
+				 
+	 		</ul>
+ 		</div>
+ 		
+ 		<div class="main-content" style="padding-left: 10px;">
+			<iframe id="myiframe" name="myiframe" width="100%"   onload="this.height=myiframe.document.body.scrollHeight" frameborder="0" src="logquery.html"></iframe>
+ 		</div>
+	</div>
+	
+	<div id="dialog-message" class="hide">
+		<h2>接口服务器地址 : </h2>
+		<p id="dl_api" >
+			<input type="text" id="new_host_url" style="width:250px;" >
+			<input type="button" value="确认" id="addNewUrl" />
+		</p>
+	</div>
+	
+  </body>
+</html>    
+    
+    
+    
+    
+    
+    
