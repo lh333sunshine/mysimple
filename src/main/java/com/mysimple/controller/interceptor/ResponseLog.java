@@ -1,11 +1,12 @@
 package com.mysimple.controller.interceptor;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
 
+import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +63,7 @@ public class ResponseLog  implements ResponseBodyAdvice<Object>{
 			slr.setRunTime(runtime);
 			slr.setCreateTime(new Date());
 			
-			String requestParams = showParams(httpRequest).toString();
+			String requestParams = showParams(httpRequest);
 			//太长的请求或输出结果，放弃存储
 			int requestLen = (requestParams.length()/1024) ;
 			slr.setRequestLen(requestLen);
@@ -87,15 +88,21 @@ public class ResponseLog  implements ResponseBodyAdvice<Object>{
 		
 	}
 	
-	private Map<String,String> showParams(HttpServletRequest request) {
-		Map<String,String> jo = new HashMap<>();
-        Enumeration paramNames = request.getParameterNames();
-        while (paramNames.hasMoreElements()) {
-            String paramName = (String) paramNames.nextElement();
-            String str = request.getParameter(paramName);
-            jo.put(paramName, str);
-        }
-        return jo;
+	private String showParams(HttpServletRequest request) {
+		try {
+			HttpServletRequestWrapper requestWrapper = new HttpServletRequestWrapper(request);
+			BufferedReader br = new BufferedReader(new InputStreamReader((ServletInputStream) requestWrapper.getInputStream(), "utf-8"));
+			StringBuffer sb = new StringBuffer("");
+			String temp;
+			while ((temp = br.readLine()) != null) {
+			    sb.append(temp);
+			}
+			br.close();
+			return sb.toString();
+		} catch (Exception e) {
+			log.error(String.valueOf(request.getAttribute("reqId")), e);
+		}
+		return "";
     } 
 	
 }
