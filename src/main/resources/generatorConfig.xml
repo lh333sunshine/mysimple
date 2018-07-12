@@ -51,27 +51,7 @@
             <property name="enableSubPackages" value="true"/>
         </javaClientGenerator>
         
-        <table  tableName="user_test" > 
-         
-    	</table>
+        <table  tableName="user_test" ></table>
     	 
-        <!-- 
-        <table  tableName="sys_api_doc" > 
-	        <property name="useActualColumnNames" value="false"/>
-	    	<generatedKey column="id" sqlStatement="MySql" identity="true" />
-    	</table>
-    	<table  tableName="sys_api_doc_log" > 
-	        <property name="useActualColumnNames" value="false"/>
-	    	<generatedKey column="id" sqlStatement="MySql" identity="true" />
-    	</table>
-    	
-        
-        <table  tableName="user_test" > 
-	        <property name="useActualColumnNames" value="false"/>
-	    	<generatedKey column="id" sqlStatement="MySql" identity="true" />
-    	</table>
-    	  
-        <table  tableName="sys_logs_request" > </table>
- 	 	-->
     </context>
 </generatorConfiguration>
