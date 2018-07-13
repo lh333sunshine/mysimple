@@ -208,6 +208,15 @@ public class CommonDbService {
 		return (Integer) o;
 	}
 	
+	public <T> T selectOneByExample(Object example, Class<T> daoClass) throws Exception{
+		Page page = new Page(1,1);
+		List<T> list = selectByExample(example,daoClass,page);
+		if(list == null || list.size()==0) {
+			return null;
+		}
+		return list.get(0);
+	}
+	
 	// 很多表时，可以使用此函数生成 entity,map,example
 	public static void main(String[] args) {
 		//扫描dao文件包，生成代码
