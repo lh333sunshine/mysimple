@@ -72,7 +72,12 @@ public class CommonDbService {
 		Object criteria = example.getClass().getMethod("createCriteria").invoke(example);
 		criteria.getClass().getMethod("andIdIn", List.class).invoke(criteria,new ArrayList<Object>(ids));
 		Object mapper = getMapper(daoClass) ;
-		Method m = mapper.getClass().getMethod("selectByExample", example.getClass());
+		Method m = null;
+		if(daoClass.getName().endsWith("WithBLOBs")) {
+			m = mapper.getClass().getMethod("selectByExampleWithBLOBs", example.getClass());
+		}else {
+			m = mapper.getClass().getMethod("selectByExample", example.getClass());
+		}
 		Object o = m.invoke(mapper, example);
 		return (List<T>) o;
 	}
@@ -104,26 +109,22 @@ public class CommonDbService {
 	
 	public <T> List<T> selectByExample(Object example, Class<T> daoClass) throws Exception{
 		if(!exampleMap.get(daoClass).equals(example.getClass())){
-			throw SystemException.init(" example is not match the daoClass"+example.getClass().getName()+","+daoClass.getName());
+			throw new Exception(" example is not match the daoClass"+example.getClass().getName()+","+daoClass.getName());
 		}
 		Object mapper = getMapper(daoClass) ;
-		Method m = mapper.getClass().getMethod("selectByExample", example.getClass());
+		Method m = null;
+		if(daoClass.getName().endsWith("WithBLOBs")) {
+			m = mapper.getClass().getMethod("selectByExampleWithBLOBs", example.getClass());
+		}else {
+			m = mapper.getClass().getMethod("selectByExample", example.getClass());
+		}
 		Object o = m.invoke(mapper, example);
 		return (List<T>) o;
 	}
  	
-	public <T> T selectOneByExample(Object example, Class<T> daoClass) throws Exception{
-		Page page = new Page(1,1);
-		List<T> list = selectByExample(example,daoClass,page);
-		if(list == null || list.size()==0) {
-			return null;
-		}
-		return list.get(0);
-	}
-	
 	public <T> List<T> selectByExample(Object example, Class<T> daoClass, Page page) throws Exception{
 		if(!exampleMap.get(daoClass).equals(example.getClass())){
-			throw SystemException.init(" example is not match the daoClass:"+example.getClass().getName()+","+daoClass.getName());
+			throw new Exception(" example is not match the daoClass:"+example.getClass().getName()+","+daoClass.getName());
 		}
 		if(page != null){
 			example.getClass().getMethod("setLimit", Integer.class).invoke(example, page.getPageSize());
@@ -134,7 +135,12 @@ public class CommonDbService {
 			page.setTotalCount(countByExample(example,daoClass));
 		}
 		Object mapper = getMapper(daoClass) ;
-		Method m = mapper.getClass().getMethod("selectByExample", example.getClass());
+		Method m = null;
+		if(daoClass.getName().endsWith("WithBLOBs")) {
+			m = mapper.getClass().getMethod("selectByExampleWithBLOBs", example.getClass());
+		}else {
+			m = mapper.getClass().getMethod("selectByExample", example.getClass());
+		}
 		Object o = m.invoke(mapper, example);
 		return (List<T>) o;
 	}
@@ -142,7 +148,7 @@ public class CommonDbService {
 	
 	public Integer countByExample(Object example, Class daoClass) throws Exception{
 		if(!exampleMap.get(daoClass).equals(example.getClass())){
-			throw SystemException.init(" example is not match the daoClass"+example.getClass().getName()+","+daoClass.getName());
+			throw new Exception(" example is not match the daoClass"+example.getClass().getName()+","+daoClass.getName());
 		}
 		Object mapper = getMapper(daoClass) ;
 		Method m = mapper.getClass().getMethod("countByExample", example.getClass());
@@ -162,6 +168,18 @@ public class CommonDbService {
 		Class daoClass = dao.getClass();
 		Object mapper = getMapper(daoClass) ;
 		Method m = mapper.getClass().getMethod("updateByPrimaryKeySelective", daoClass);
+		Object o = m.invoke(mapper, dao);
+		return (Integer) o;
+	}
+	public Integer updateByKeyAll(Object dao) throws Exception{
+		Class daoClass = dao.getClass();
+		Object mapper = getMapper(daoClass) ;
+		Method m = null;
+		if(daoClass.getName().endsWith("WithBLOBs")) {
+			m = mapper.getClass().getMethod("updateByPrimaryKeyWithBLOBs", daoClass);
+		}else {
+			m = mapper.getClass().getMethod("updateByPrimaryKey", daoClass);
+		}
 		Object o = m.invoke(mapper, dao);
 		return (Integer) o;
 	}
